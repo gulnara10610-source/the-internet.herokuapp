@@ -2,7 +2,9 @@ TITILE_MAIN_PAGE = 'Welcome to the-internet'
 
 TITLE_LOGIN_PAGE = 'Login Page'
 
-ALERT_USERNAME = " Your username is invalid! "
+ALERT_USERNAME = ("Your password is invalid!")
+
+ALERT_USERNAME_INVALID = ("Your username is invalid!")
 
 ALERT_LOGGED = ' You logged into a secure area! '
 
