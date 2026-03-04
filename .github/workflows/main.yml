@@ -8,8 +8,9 @@ on:
     branches: [ main ]
 jobs:
   test:
-    timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      BASE_URL: ${{ vars.BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -22,6 +23,7 @@ jobs:
           pip install -r requirements.txt
       - name: Ensure browsers are installed
         run: python -m playwright install --with-deps
+
       - name: Run tests
         run: pytest
         env:
@@ -31,3 +33,69 @@ jobs:
         with:
           name: playwright-traces
           path: test-results/
+
+  generate-report:
+      runs-on: ubuntu-latest
+      needs: test
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Download previous Allure history
+          uses: actions/checkout@v4
+          with:
+            ref: gh-pages
+            path: gh-pages
+            fetch-depth: 1
+
+        - name: Download Allure results
+          uses: actions/download-artifact@v4
+          with:
+            name: allure-results
+            path: allure-results
+
+        - name: Merge Allure results
+          run: |
+            mkdir -p allure-history
+            if [ -d gh-pages/history ]; then
+              cp -r gh-pages/history allure-results/ || true
+            fi
+
+        - name: Build Allure Report
+          uses: simple-elf/allure-report-action@v1.13
+          with:
+            allure_results: allure-results
+            allure_history: allure-history
+            keep_reports: ${{ github.event.inputs.keep_reports || 10 }}
+
+        - name: Store generated report
+          uses: actions/upload-artifact@v4
+          with:
+            name: allure-history
+            path: allure-history
+            retention-days: 1
+
+  publish-report:
+    runs-on: ubuntu-latest
+    needs: generate-report
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download generated report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-history
+          path: allure-history
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          keep_files: true
+
+      - name: Log Allure Report URL
+        run: |
+          echo "Allure Report URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+
+
