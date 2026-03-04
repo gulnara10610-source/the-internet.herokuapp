@@ -8,9 +8,8 @@ on:
     branches: [ main ]
 jobs:
   test:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
-    env:
-      BASE_URL: ${{ vars.BASE_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -23,7 +22,6 @@ jobs:
           pip install -r requirements.txt
       - name: Ensure browsers are installed
         run: python -m playwright install --with-deps
-
       - name: Run tests
         run: pytest
         env:
