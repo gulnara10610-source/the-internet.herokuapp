@@ -17,7 +17,9 @@ class Element:
 
     @allure.step("Check text of element")
     def check_text(self, text: str):
-        expect(self._find()).to_have_text(str(text), timeout=5000)
+        element = self._find()
+        expect(element).to_be_visible()
+        expect(element).to_have_text(str(text))
 
     @allure.step("Fill input")
     def fill(self, text) -> str:
@@ -28,6 +30,7 @@ class Element:
     def click(self, **kwargs) -> None:
         self._find().click(**kwargs)
 
-    @allure.step("Check containt text of element")
-    def check_contain_text(self, text: str):
-        expect(self._find()).to_contain_text(str(text), timeout=5000)
+    @allure.step("Check contain text of element")
+    def check_contain_text(self, selector: str, text: str):
+        element = self.page.locator(selector)
+        expect(element).to_contain_text(text)
